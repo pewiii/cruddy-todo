@@ -17,15 +17,20 @@ exports.create = (text, callback) => {
       });
     }
   });
-
-  //callback(null, { id, text });
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
+  fs.readdir(exports.dataDir, (err, files) => {
+    if (err) {
+      callback(err);
+    } else {
+      var data = _.map(files, (file) => {
+        var id = file.slice(0, 5);
+        return { id, text: id };
+      });
+    }
+    callback(err, data);
   });
-  callback(null, data);
 };
 
 exports.readOne = (id, callback) => {
