@@ -24,9 +24,9 @@ exports.readAll = (callback) => {
     if (err) {
       callback(err);
     } else {
-      var data = _.map(files, (file) => {
-        var id = file.slice(0, 5);
-        return { id, text: id };
+      var data = _.map(files, (file) => { //file is 00001.txt
+        var id = file.slice(0, 5); //id is 00001
+        return { id, text: id }; // {id: 00001, text: 00001}
       });
     }
     callback(err, data);
@@ -34,12 +34,16 @@ exports.readAll = (callback) => {
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  fs.readFile(exports.dataDir + '/' + id + '.txt', 'utf-8', (err, text) => {
+    callback(err, {id, text}); //{id: 00001, text: 'dosomething'}
+  });
+
+  // var text = items[id];
+  // if (!text) {
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   callback(null, { id, text });
+  // }
 };
 
 exports.update = (id, text, callback) => {
