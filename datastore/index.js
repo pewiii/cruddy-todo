@@ -37,23 +37,23 @@ exports.readOne = (id, callback) => {
   fs.readFile(exports.dataDir + '/' + id + '.txt', 'utf-8', (err, text) => {
     callback(err, {id, text}); //{id: 00001, text: 'dosomething'}
   });
-
-  // var text = items[id];
-  // if (!text) {
-  //   callback(new Error(`No item with id: ${id}`));
-  // } else {
-  //   callback(null, { id, text });
-  // }
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  // make sure file exists
+    //if theres an error then callback the error
+    //overwrite the file with the updated file
+    //callback error object
+
+  fs.access(exports.dataDir + '/' + id + '.txt', (err) => {
+    if (err) {
+      callback(err);
+    } else {
+      fs.writeFile(exports.dataDir + '/' + id + '.txt', text, (err) => {
+        callback(err, {id: id, text: text});
+      });
+    }
+  });
 };
 
 exports.delete = (id, callback) => {
