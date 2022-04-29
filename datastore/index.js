@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
-
+const util = require('util');
 var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
@@ -19,18 +19,25 @@ exports.create = (text, callback) => {
   });
 };
 
+var readdir = util.promisify(fs.readdir);
+var readFile = util.promisify(fs.readFile);
+
 exports.readAll = (callback) => {
-  fs.readdir(exports.dataDir, (err, files) => {
-    if (err) {
-      callback(err);
-    } else {
-      var data = _.map(files, (file) => { //file is 00001.txt
-        var id = file.slice(0, 5); //id is 00001
-        return { id, text: id }; // {id: 00001, text: 00001}
-      });
-    }
-    callback(err, data);
-  });
+  return readdir(exports.dataDir)
+    .then((files) => {
+      Promise.all(files.map((file) => {
+        return readFile(exports.dataDir + '/' + file, 'utf-8');
+      }))
+        .then((promises) => {
+          Promise.all(promises)
+            .then((texts) => {
+              callback(null, files.map((file, index) => {
+                return { id: file.slice(0, 5), text: texts[index] };
+              }));
+            });
+        });
+    });
+
 };
 
 exports.readOne = (id, callback) => {
@@ -40,11 +47,6 @@ exports.readOne = (id, callback) => {
 };
 
 exports.update = (id, text, callback) => {
-  // make sure file exists
-    //if theres an error then callback the error
-    //overwrite the file with the updated file
-    //callback error object
-
   fs.access(exports.dataDir + '/' + id + '.txt', (err) => {
     if (err) {
       callback(err);
@@ -57,14 +59,9 @@ exports.update = (id, text, callback) => {
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  fs.unlink(exports.dataDir + '/' + id + '.txt', (err) => {
+    callback(err);
+  });
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
